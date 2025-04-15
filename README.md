@@ -9,13 +9,6 @@ Wildfire modeling within sagebrush-dominated landscapes is challenging due to th
 **Data Sources and Methods:**\
 This project will leverage vegetative composition datasets from the Sagebrush Steppe Treatment and Evaluation Project (SageSTEP), spanning approximately 2006 to 2018. Data from 15 diverse study sites distributed across the Great Basin collectively represent the region's variation and dynamics of vegetation types. These datasets will be integrated into spatially explicit modeling frameworks, using empirical and probabilistic approaches to adjust fuel model parameters, explicitly accounting for gaps, vegetation patchiness, and spatial discontinuities.
 
-**Proposed Modeling Approach:**
-
-- Development of spatially explicit custom fuelbeds tailored to sagebrush steppe ecosystems.
-- Integration of spatial probability functions to simulate fire spread across vegetation gaps.
-- Calibration of fuel model parameters to represent actual fuel loading, bulk density, and moisture characteristics.
-- Incorporation of cellular automata or grid-based modeling techniques to explicitly represent landscape heterogeneity at a fine spatial scale.
-
 **Anticipated Outcomes and Significance:**\
 The proposed refined modeling framework will offer land managers more accurate, reliable wildfire predictions explicitly tailored to the unique conditions of sagebrush steppe ecosystems. Enhanced accuracy will support effective fire suppression, prescribed burning, invasive species control, and ecosystem restoration planning efforts, contributing significantly to the resilience and conservation of these critical arid ecosystems.
 
