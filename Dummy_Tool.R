@@ -1,5 +1,5 @@
 library(shiny)
-
+## This is interesting --  I'm excited to dig into how this tool works
 ui <- fluidPage(
   titlePanel("🔥 Wildfire Model Interactive Tool"),
   
