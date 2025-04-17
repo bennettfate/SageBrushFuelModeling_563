@@ -12,8 +12,9 @@ This project will leverage vegetative composition datasets from the Sagebrush St
 To enhance model accessibility and adaptability, we propose developing an interactive web-based tool using RShiny.
 
 ## **Anticipated Outcomes and Significance:**
-The proposed refined modeling framework will offer land managers more accurate, reliable wildfire predictions explicitly tailored to the unique conditions of sagebrush steppe ecosystems. Enhanced accuracy will support effective fire suppression, prescribed burning, invasive species control, and ecosystem restoration planning efforts, contributing significantly to the resilience and conservation of these critical arid ecosystems. 
-RShiny tool will allow users to explore, adjust, and visualize model outputs in real time. Users will be able to input site-specific variables, modify fuel parameters, and test scenario-based simulations, supporting both research and management decision-making. This component aims to bridge model development and end-user application by making the models more transparent, customizable, and easy to disseminate.
+1. The proposed refined modeling framework will offer land managers more accurate, reliable wildfire predictions explicitly tailored to the unique conditions of sagebrush steppe ecosystems.
+2. Enhanced accuracy will support effective fire suppression, prescribed burning, invasive species control, and ecosystem restoration planning efforts, contributing significantly to the resilience and conservation of these critical arid ecosystems.
+3. RShiny tool will allow users to explore, adjust, and visualize model outputs in real time. Users will be able to input site-specific variables, modify fuel parameters, and test scenario-based simulations, supporting both research and management decision-making. This component aims to bridge model development and end-user application by making the models more transparent, customizable, and easy to disseminate.
 
 ![image](https://github.com/user-attachments/assets/59b692ec-b335-4c39-adbe-b5a73ee98b87)
 
