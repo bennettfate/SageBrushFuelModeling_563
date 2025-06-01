@@ -35,7 +35,7 @@ Biotic_cov_with_xy <- Biotic_cov %>%
   left_join(fire %>% select(FIRE_ID, x, y), by = c("OBJECTID_1" = "FIRE_ID"))
 
 Biotic_cov_with_xy <- Biotic_cov_with_xy[, c(2:7, 17,18)] #extracting the necessary columns
-
+head(Biotic_cov_with_xy)
 
 
 ############################################################################################################################
@@ -116,7 +116,6 @@ cov_2020_2024_2 <- cov_2020_2024_2 %>%
   )
 
 
-
 #both biotic and abiotic covs are matched by location and the year
 matched_df <- inner_join(
   cov_2020_2024_2,
@@ -126,7 +125,7 @@ matched_df <- inner_join(
 
 head(matched_df)
 
-
+matched_df$vpdmax..hPa.
 
 #maybe the right way to do this is this
 
@@ -135,19 +134,43 @@ yearly_summary <- matched_df %>%
   mutate(Year = format(Date, "%Y")) %>%
   group_by(Year) %>%
   summarise(
-    mean_ppt = mean(tmean..degrees.C., na.rm = TRUE),
-    sd_ppt = sd(tmean..degrees.C., na.rm = TRUE),
+    mean_value = mean(TRE, na.rm = TRUE),
+    sd_shades = sd(TRE, na.rm = TRUE),
     n = n(),
-    se_ppt = sd_ppt / sqrt(n)
+    sd_shades = sd_shades / sqrt(n)
   )
 
-# Then plot
-ggplot(yearly_summary, aes(x = Year, y = mean_ppt, group = 1)) +
-  geom_line(color = "#800000") +
-  geom_ribbon(aes(ymin = mean_ppt - se_ppt, ymax = mean_ppt + se_ppt), fill = "#800000", alpha = 0.3) +
-  theme_classic() +
-  labs(x = "Year", y = "", title = "Mean precipitation")
+yearly_summary$Year <- as.numeric(yearly_summary$Year)
 
+
+# Then plot
+ggplot(yearly_summary, aes(x = Year, y = mean_value, group = 1)) +
+  geom_line(color = "black", linewidth = 1) +
+  geom_ribbon(aes(ymin = mean_value - sd_shades, ymax = mean_value + sd_shades), fill = "#800000", alpha = 0.3) +
+  scale_x_continuous(breaks = 2021:2024, limits = c(2021, 2024)) +
+  labs(x = "Year", y = "", title = "TRE") +
+  theme(
+    aspect.ratio = 0.7,
+    axis.text.y = element_text(colour = "black", size = 16), 
+    axis.text.x = element_text(colour = "black", size = 16),  
+    legend.position = "right",
+    axis.title.x = element_text(colour = "black", size = 17),  
+    axis.title.y = element_text(colour = "black", size = 17),  
+    axis.ticks = element_line(colour = "black", size = 1),
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.2),
+    plot.title = element_text(colour = "black", size = 24, hjust = 0.5),
+    plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+    legend.text = element_text(size = 17, colour = "black"), 
+    legend.title = element_text(size = 17),
+    legend.key=element_blank(),
+    legend.key.size = unit(0.5, 'cm'),  # Increased legend key size
+  )
+
+
+ggsave(filename="TRE.jpeg", width= 11, height=6, units = "in", dpi=600)
 
 
 
@@ -164,30 +187,133 @@ ggplot(yearly_summary, aes(x = Year, y = mean_ppt, group = 1)) +
 fire_rf <- matched_df %>%
   mutate(is_bad_fire = ifelse(Year == 2024, 1, 0))  
 
+
 #all the covariates that goes into the model are included in here
 fire_rf <- fire_rf %>%
   select(is_bad_fire,
          tmean = tmean..degrees.C.,
          ppt = ppt..mm.,
          vpd = vpdmax..hPa.,
-         AFG,PFG,SHR, TRE)
+         AFG,PFG,SHR,TRE)
 
 
-#model training
+
+############
+
+set.seed(123)
+
+# Split data: 70% train, 30% test
+train_idx <- sample(nrow(fire_rf), 0.7 * nrow(fire_rf))
+train_data <- fire_rf[train_idx, ]
+test_data <- fire_rf[-train_idx, ]
+
+# Train model
 rf_model <- randomForest(
-  factor(is_bad_fire) ~ .,
-  data = fire_rf,
-  importance = TRUE,
-  ntree = 500
+  factor(is_bad_fire) ~ ., 
+  data = train_data, 
+  importance = TRUE, 
+  ntree = 500,
+  mtry = 3
 )
 
-# Numeric importance values
-importance(rf_model)
+# Predict on test set
+test_preds <- predict(rf_model, newdata = test_data)
+ 
+# Confusion matrix
+confusionMatrix(test_preds, factor(test_data$is_bad_fire))
 
-# Visual plot
+pairs(fire_rf[, -1], col = fire_rf$is_bad_fire + 1)
+
+
+###########trying pca
+
+# Load required libraries
+library(ggplot2)
+library(FactoMineR)
+library(factoextra)
+library(dplyr)
+
+# Make sure the response is NOT in the PCA input
+pca_input <- fire_rf %>% select(-is_bad_fire)
+
+pca_res <- prcomp(pca_input, scale = FALSE)
+autoplot(pca_res, data = fire_rf, colour = 'is_bad_fire', frame = TRUE, frame.type = 'norm')
+
+# Run PCA
+pca_result <- PCA(pca_input, graph = FALSE)
+
+# Extract PCA scores
+pca_scores <- as.data.frame(pca_result$ind$coord)
+pca_scores$is_bad_fire <- factor(fire_rf$is_bad_fire)
+
+# Plot with ellipses
+fviz_pca_ind(pca_result,
+             geom.ind = "point",
+             col.ind = pca_scores$is_bad_fire,
+             palette = c("#1b9e77", "#d95f02"),
+             addEllipses = TRUE,
+             ellipse.type = "confidence",
+             legend.title = "Fire in 2024") +
+  theme_classic() +
+  labs(title = "PCA of Fire Covariates with 2024 Fire Clustering")
+
+
+##########
+
+
 varImpPlot(rf_model, main = "Variable Importance for 2024 ")
-#Important by both metrics → fires in 2024 occurred under higher VPD
-#Also very influential → higher temps may be linked to 2024 fires
+
+
+##########
+
+
+
+#########################
+
+# Extract variable importance
+vip_df <- as.data.frame(importance(rf_model))
+vip_df$Variable <- rownames(vip_df)
+
+
+# focus on MeanDecreaseGini or MeanDecreaseAccuracy
+vip_df <- vip_df %>%
+  arrange(desc(MeanDecreaseGini))
+
+# Plot
+ggplot(vip_df, aes(x = reorder(Variable, MeanDecreaseGini), y = MeanDecreaseGini)) +
+  geom_col(fill = "black") +
+  coord_flip() +
+  theme_classic() +
+  labs(
+    title = "Variable Importance in 2024 fires",
+    x = "Variables",
+    y = "Gini Index"
+  ) +
+  theme(
+    aspect.ratio = 0.8,
+    axis.text.y = element_text(colour = "black", size = 20), 
+    axis.text.x = element_text(colour = "black", size = 20),  
+    legend.position = "right",
+    axis.title.x = element_text(colour = "black", size = 17),  
+    axis.title.y = element_text(colour = "black", size = 17),  
+    axis.ticks = element_line(colour = "black", size = 1),
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.2),
+    plot.title = element_text(colour = "black", size = 24, hjust = 0.5),
+    plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+    legend.text = element_text(size = 17, colour = "black"), 
+    legend.title = element_text(size = 17),
+    legend.key=element_blank(),
+    legend.key.size = unit(0.5, 'cm'),  # Increased legend key size
+  )
+
+ggsave(filename="Gini Index.jpeg", width= 11, height=6, units = "in", dpi=600)
+
+
+
+
 
 
 
@@ -197,6 +323,7 @@ partialPlot(rf_model, pred.data = fire_rf, x.var = "tmean")
 
 ggplot(fire_rf, aes(x = vpd, fill = factor(is_bad_fire))) +
   geom_density(alpha = 0.4) + theme_classic()
+########################
 
 
 
@@ -209,60 +336,9 @@ ggplot(fire_rf, aes(x = vpd, fill = factor(is_bad_fire))) +
 
 
 
-###############not important this is just for the testing###################################
-#there are just this and that I have been tesing############################################
-###########dnt run##########################################################################
-# Join: which cov points fall within 1000m of any fire point
-cov_near_fire <- st_join(
-  cov_sf,
-  st_buffer(fire_sf, dist = 10000),
-  join = st_intersects,
-  left = FALSE,
-  suffix = c("_cov", "_fire")
-)
-
-
-unique(cov_near_fire$id_fire)
-#[1]  73  35  36  41  60  67  84 153 156 157 168 278 315 323 329 331 353 362 415 424
-
-# 1. Filter cov points near fire_id == 1
-CCC <- cov_near_fire %>% filter(id_fire == 73)
-
-# 2. Filter the corresponding fire point itself
-FFF <- fire_sf %>% filter(id == 73)
-
-# 3. Visualize together
-mapview(fire_sf, col.regions = "red", layer.name = "Fire Point 1")+
-  mapview(cov_near_fire, col.regions = "blue")
-
-# 3. Visualize together
-mapview(FFF, col.regions = "red", layer.name = "Fire Point 1") +
-  mapview(CCC, col.regions = "blue", layer.name = "Cov points within 200m")
-
-
-# Get cov info near fire_id == 100 (for example)
-cov_ids <- cov_near_fire %>% filter(id_fire == 73) %>% pull(id_cov)
-
-cov_original <- cov %>% filter(cov_id %in% cov_ids)
-
-# Get the original fire point
-fire_original <- fire %>% filter(FIRE_ID == 73)
-
-class(cov_original$Date)
-cov_original$Date <- as.Date(paste0(cov_original$Date, "-01"), format = "%Y-%m-%d")
 
 
 
-library(dplyr)
-
-
-#time series for the environmental variables for each fire
-cov_original$ppt..mm.
-head(cov_original)
-ggplot(data = cov_original, aes(x=Date, y=ppt..mm.)) +
-  geom_line(color = "#800000")+
-  labs(x = "Date (by month)", y = "Precipitation (mm)")+
-  theme_classic()
 
 
 
