@@ -307,3 +307,105 @@ mapview(Biotic_cov_sf, zcol = "AFG", col.regions = viridis::viridis(100), layer.
 
 
 ```
+
+
+
+Random forest part
+```{r}
+###############################################################################
+#we are focusing on 2020 - 2024
+#setting up binary for RF classification model
+#Year 2024 is set as 1 and others set as 0
+fire_rf <- matched_df %>%
+  mutate(is_bad_fire = ifelse(Year == 2024, 1, 0))  
+
+
+table(fire_rf$is_bad_fire)
+
+#all the covariates that goes into the model are included in here
+fire_rf <- fire_rf %>%
+  select(is_bad_fire,
+         tmean = tmean..degrees.C.,
+         ppt = ppt..mm.,
+         vpd = vpdmax..hPa.,
+         AFG,PFG,SHR,TRE)
+
+set.seed(123)
+
+# Split data: 70% train, 30% test
+train_idx <- sample(nrow(fire_rf), 0.7 * nrow(fire_rf))
+train_data <- fire_rf[train_idx, ]
+test_data <- fire_rf[-train_idx, ]
+
+# Train model
+rf_model <- randomForest(
+  factor(is_bad_fire) ~ ., 
+  data = train_data, 
+  importance = TRUE, 
+  ntree = 500,
+  mtry = 3
+)
+
+# Predict on test set
+test_preds <- predict(rf_model, newdata = test_data)
+# Confusion matrix
+confusionMatrix(test_preds, factor(test_data$is_bad_fire))
+varImpPlot(rf_model, main = "Variable Importance for 2024")
+
+```
+
+Potting the model
+
+
+```{r}
+
+#########################
+# Extract variable importance
+vip_df <- as.data.frame(importance(rf_model))
+vip_df$Variable <- rownames(vip_df)
+
+
+# focus on MeanDecreaseGini or MeanDecreaseAccuracy
+vip_df <- vip_df %>%
+  arrange(desc(MeanDecreaseGini))
+
+# Plot
+ggplot(vip_df, aes(x = reorder(Variable, MeanDecreaseGini), y = MeanDecreaseGini)) +
+  geom_col(fill = "black") +
+  coord_flip() +
+  theme_classic() +
+  labs(
+    title = "Variable Importance in 2024 fires",
+    x = "Variables",
+    y = "Gini Index"
+  ) +
+  theme(
+    aspect.ratio = 0.8,
+    axis.text.y = element_text(colour = "black", size = 20), 
+    axis.text.x = element_text(colour = "black", size = 20),  
+    legend.position = "right",
+    axis.title.x = element_text(colour = "black", size = 17),  
+    axis.title.y = element_text(colour = "black", size = 17),  
+    axis.ticks = element_line(colour = "black", size = 1),
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.2),
+    plot.title = element_text(colour = "black", size = 24, hjust = 0.5),
+    plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+    legend.text = element_text(size = 17, colour = "black"), 
+    legend.title = element_text(size = 17),
+    legend.key=element_blank(),
+    legend.key.size = unit(0.5, 'cm'),  # Increased legend key size
+  )
+
+
+partialPlot(rf_model, pred.data = fire_rf, x.var = "vpd")
+partialPlot(rf_model, pred.data = fire_rf, x.var = "tmean")
+
+
+ggplot(fire_rf, aes(x = vpd, fill = factor(is_bad_fire))) +
+  geom_density(alpha = 0.4) + theme_classic()
+
+```
+

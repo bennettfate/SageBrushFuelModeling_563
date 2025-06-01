@@ -7,11 +7,13 @@ library(mapview)
 library(ggplot2)
 library(randomForest)
 library(pdp)
+library(ggfortify)
+library(cluster)
+library(caret)
 
 #setwd("C:/Users/malit/Box/2.Classes/Geog_563_Analytical_workflow/project/Data")
 #just run this without setting up  working directory
 fire <- read.csv("Selected_fire_information.csv")  # This is the fire data, fire locations and names 
-
 
 
 #Abiotic covariates>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -37,6 +39,44 @@ Biotic_cov_with_xy <- Biotic_cov %>%
 Biotic_cov_with_xy <- Biotic_cov_with_xy[, c(2:7, 17,18)] #extracting the necessary columns
 head(Biotic_cov_with_xy)
 
+
+
+# Calculate mean biotic varibale per year
+#we make the abitoc time series maps later. 
+summary <- Biotic_cov_with_xy %>%
+  group_by(year) %>%
+  summarise(mean_bio = mean(TRE, na.rm = TRUE))
+
+# Create the bar plot
+ggplot(summary, aes(x = year, y = mean_bio)) +
+  geom_bar(stat = "identity", fill = "darkgreen") +
+  theme_classic() +
+  labs(
+   # title = "Mean AFG by Fire Year",
+    x = "Fire Year",
+    y = "Mean TRE (%)"
+  ) +
+  theme(
+    aspect.ratio = 0.7,
+    axis.text.y = element_text(colour = "black", size = 16), 
+    axis.text.x = element_text(colour = "black", size = 16),  
+    legend.position = "right",
+    axis.title.x = element_text(colour = "black", size = 17),  
+    axis.title.y = element_text(colour = "black", size = 17),  
+    axis.ticks = element_line(colour = "black", size = 1),
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.2),
+    plot.title = element_text(colour = "black", size = 24, hjust = 0.5),
+    plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+    legend.text = element_text(size = 17, colour = "black"), 
+    legend.title = element_text(size = 17),
+    legend.key=element_blank(),
+    legend.key.size = unit(0.5, 'cm'),  # Increased legend key size
+  )
+
+ggsave(filename="TRE.jpeg", width= 11, height=6, units = "in", dpi=600)
 
 ############################################################################################################################
 ###############extracting the info we need to make maps
@@ -180,13 +220,13 @@ ggsave(filename="TRE.jpeg", width= 11, height=6, units = "in", dpi=600)
 #######################RF model#######################################################
 ###############################################################################
 #we are focusing on 2020 - 2024
-
-
 #setting up binary for RF classification model
 #Year 2024 is set as 1 and others set as 0
 fire_rf <- matched_df %>%
   mutate(is_bad_fire = ifelse(Year == 2024, 1, 0))  
 
+
+table(fire_rf$is_bad_fire)
 
 #all the covariates that goes into the model are included in here
 fire_rf <- fire_rf %>%
@@ -195,10 +235,6 @@ fire_rf <- fire_rf %>%
          ppt = ppt..mm.,
          vpd = vpdmax..hPa.,
          AFG,PFG,SHR,TRE)
-
-
-
-############
 
 set.seed(123)
 
@@ -218,53 +254,16 @@ rf_model <- randomForest(
 
 # Predict on test set
 test_preds <- predict(rf_model, newdata = test_data)
- 
 # Confusion matrix
 confusionMatrix(test_preds, factor(test_data$is_bad_fire))
-
-pairs(fire_rf[, -1], col = fire_rf$is_bad_fire + 1)
-
-
-###########trying pca
-
-# Load required libraries
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
-library(dplyr)
-
-# Make sure the response is NOT in the PCA input
-pca_input <- fire_rf %>% select(-is_bad_fire)
-
-pca_res <- prcomp(pca_input, scale = FALSE)
-autoplot(pca_res, data = fire_rf, colour = 'is_bad_fire', frame = TRUE, frame.type = 'norm')
-
-# Run PCA
-pca_result <- PCA(pca_input, graph = FALSE)
-
-# Extract PCA scores
-pca_scores <- as.data.frame(pca_result$ind$coord)
-pca_scores$is_bad_fire <- factor(fire_rf$is_bad_fire)
-
-# Plot with ellipses
-fviz_pca_ind(pca_result,
-             geom.ind = "point",
-             col.ind = pca_scores$is_bad_fire,
-             palette = c("#1b9e77", "#d95f02"),
-             addEllipses = TRUE,
-             ellipse.type = "confidence",
-             legend.title = "Fire in 2024") +
-  theme_classic() +
-  labs(title = "PCA of Fire Covariates with 2024 Fire Clustering")
+varImpPlot(rf_model, main = "Variable Importance for 2024")
 
 
 ##########
+library(pROC)
+roc_obj <- roc(test_data$is_bad_fire, as.numeric(test_preds))
+plot(roc_obj, col = "darkred")
 
-
-varImpPlot(rf_model, main = "Variable Importance for 2024 ")
-
-
-##########
 
 
 
