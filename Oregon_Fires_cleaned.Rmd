@@ -216,4 +216,94 @@ ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Co
     y = "Fire Name"
   ) +
   xlim(0, max(afg_2023_table$`AFG Cover (%)`, na.rm = TRUE) + 5)
+``` 
+
+
+
+```{r}
+# Define the plotting function
+plot_functional_group <- function(df, group_var) {
+  group_label <- switch(group_var,
+                        "PFG" = "PFG Cover (%)",
+                        "SHR" = "Shrub Cover (%)",
+                        "TRE" = "Tree Cover (%)",
+                        group_var)
+
+  df_group <- df %>%
+    filter(year == 2023) %>%
+    rename(
+      FIRE_ID = OBJECTID_1,
+      `Fire Name` = INCIDENT,
+      `Fire Size (acres)` = GIS_ACRES
+    ) %>%
+    mutate(
+      Cover = .data[[group_var]],
+      `Percent of Total Burned` = `Fire Size (acres)` / sum(`Fire Size (acres)`, na.rm = TRUE),
+      Label = paste0(round(`Percent of Total Burned` * 100, 1), "%\n(", round(`Fire Size (acres)`), " acres)")
+    ) %>%
+    select(FIRE_ID, `Fire Name`, Cover, `Fire Size (acres)`, Label)
+
+  total_acres <- sum(df_group$`Fire Size (acres)`, na.rm = TRUE)
+
+  ggplot(df_group, aes(x = Cover, y = reorder(`Fire Name`, Cover))) +
+    geom_point(aes(size = `Fire Size (acres)`), color = "#005f73", alpha = 0.7) +
+    geom_text(aes(label = Label), hjust = -0.1, size = 3.5) +
+    scale_size_continuous(range = c(2, 10)) +
+    guides(size = "none") +
+    theme_classic() +
+    labs(
+      title = paste0("2023 ", group_label, " by Fire"),
+      subtitle = paste("Dot labels show % of total acres burned\nTotal acres burned:",
+                       scales::comma(round(total_acres, 0))),
+      x = group_label,
+      y = "Fire Name"
+    ) +
+    xlim(0, max(df_group$Cover, na.rm = TRUE) + 5)
+}
+
+plot_functional_group(Biotic_cov, "PFG")
+plot_functional_group(Biotic_cov, "SHR")
+plot_functional_group(Biotic_cov, "TRE")
+``` 
+
+
+```{r}
+# Example prep
+multi_fg <- Biotic_cov %>%
+  filter(year == 2023) %>%
+  select(FIRE_ID = OBJECTID_1, INCIDENT, AFG, PFG, SHR, TRE) %>%
+  pivot_longer(cols = AFG:TRE, names_to = "Group", values_to = "Cover")
+
+ggplot(multi_fg, aes(x = reorder(INCIDENT, -Cover), y = Cover, fill = Group)) +
+  geom_col(position = "dodge") +
+  labs(title = "Functional Group Cover by Fire (2023)", x = "Fire", y = "Cover (%)") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+``` 
+```{r}
+Biotic_cov %>%
+  group_by(year) %>%
+  summarise(across(AFG:TRE, ~ mean(., na.rm = TRUE))) %>%
+  pivot_longer(cols = AFG:TRE, names_to = "Group", values_to = "MeanCover") %>%
+  ggplot(aes(x = year, y = MeanCover, color = Group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(title = "Mean Functional Group Cover Over Time", y = "Mean Cover (%)", x = "Year")
+
+
+
+
+
+``` 
+
+
+```{r}
+library(sf)
+Biotic_cov_sf <- st_as_sf(Biotic_cov_with_xy, coords = c("x", "y"), crs = 4326)
+
+mapview(Biotic_cov_sf, zcol = "AFG", col.regions = viridis::viridis(100), layer.name = "AFG Cover")
+
+
+
 ```
