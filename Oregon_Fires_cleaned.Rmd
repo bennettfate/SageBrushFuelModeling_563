@@ -216,6 +216,7 @@ ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Co
     y = "Fire Name"
   ) +
   xlim(0, max(afg_2023_table$`AFG Cover (%)`, na.rm = TRUE) + 5)
+<<<<<<< Updated upstream
 ``` 
 
 
@@ -306,4 +307,6 @@ mapview(Biotic_cov_sf, zcol = "AFG", col.regions = viridis::viridis(100), layer.
 
 
 
+=======
+>>>>>>> Stashed changes
 ```
