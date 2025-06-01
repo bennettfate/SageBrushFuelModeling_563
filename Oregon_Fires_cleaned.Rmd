@@ -1,0 +1,219 @@
+---
+title: "Oregon_fire_laken"
+author: "Laken Alles"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(sf)
+library(mapview)
+library(ggplot2)
+library(randomForest)
+library(pdp)
+library(tidyr)
+```
+
+##Load and Prepare Data
+
+```{r load-data}
+# Load fire location and identifier data
+fire <- read.csv("Selected_fire_information.csv")
+
+# Load abiotic covariate data
+cov <- read.csv("Fire_data.csv") %>%
+  filter(!apply(., 1, function(row) all(is.na(row) | row == ""))) %>%
+  mutate(cov_id = row_number())
+
+# Subset covariate data to only include 2024 fires
+unique_fire_ids <- unique(fire$FIRE_ID)
+correct_abiotic_cov <- cov %>% filter(Name %in% unique_fire_ids)
+
+# Load biotic covariate data and join XY coordinates from fire data
+Biotic_cov <- read.csv("ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv")
+Biotic_cov_with_xy <- Biotic_cov %>%
+  left_join(fire %>% select(FIRE_ID, x, y), by = c("OBJECTID_1" = "FIRE_ID")) %>%
+  select(2:7, x, y)  # Selecting only relevant columns
+```
+
+## Visualize Fire and Covariate Locations
+
+```{r map-setup}
+# Prepare data for mapping
+cov_sub <- correct_abiotic_cov %>% select(id = cov_id, x, y) %>% mutate(type = "cov")
+fire_sub <- fire %>% select(id = FIRE_ID, x, y) %>% mutate(type = "fire")
+
+full_xy <- bind_rows(cov_sub, fire_sub)
+full_xy_sf <- st_as_sf(full_xy, coords = c("x", "y"), crs = 4326)
+full_xy_sf_proj <- st_transform(full_xy_sf, crs = 2991)  # UTM zone for Oregon
+
+fire_sf <- full_xy_sf_proj %>% filter(type == "fire")
+cov_sf  <- full_xy_sf_proj %>% filter(type == "cov")
+
+# Interactive maps
+mapview(fire_sf, col.regions = "red", layer.name = "Fires") +
+  mapview(cov_sf, col.regions = "green", layer.name = "Covariates")
+```
+
+## Format Dates and Join Biotic + Abiotic Covariates 
+
+```{r date-formatting}
+# Biotic covariates: Ensure year is in Date format
+Biotic_cov_with_xy$year <- as.Date(paste0(Biotic_cov_with_xy$year, "-01-01"))
+Biotic_cov_with_xy <- Biotic_cov_with_xy %>% mutate(Year = format(year, "%Y"))
+
+# Abiotic covariates: Parse date and subset to 2020–2024
+correct_abiotic_cov$Date <- as.Date(paste0(correct_abiotic_cov$Date, "-01"), format = "%Y-%m-%d")
+cov_2020_2024 <- correct_abiotic_cov %>% filter(Date >= as.Date("2020-01-01"), Date <= as.Date("2024-12-31")) %>%
+  mutate(Year = format(Date, "%Y"))
+
+# Round coordinates to enable joins
+Biotic_cov_with_xy <- Biotic_cov_with_xy %>% mutate(x = round(x, 4), y = round(y, 4), Year = as.character(Year))
+cov_2020_2024 <- cov_2020_2024 %>% mutate(x = round(x, 4), y = round(y, 4), Year = as.character(Year))
+
+# Join biotic and abiotic by location and year
+matched_df <- inner_join(cov_2020_2024, Biotic_cov_with_xy, by = c("x", "y", "Year"))
+```
+
+## Temporal Trends in Abiotic and Biotic Conditions
+
+```{r abiotic-boxplot}
+df_abiotic <- read.csv("Fire_data.csv", check.names = FALSE) %>%
+  rename(
+    FIRE_ID = Name,
+    ppt = `ppt (mm)`,
+    tmin = `tmin (degrees C)`,
+    tmean = `tmean (degrees C)`,
+    tmax = `tmax (degrees C)`,
+    tdmean = `tdmean (degrees C)`,
+    vpdmin = `vpdmin (hPa)`,
+    vpdmax = `vpdmax (hPa)`
+  ) %>%
+  filter(!is.na(FIRE_ID)) %>%
+  mutate(Year = format(as.Date(paste0(Date, "-01")), "%Y")) %>%
+  filter(Year %in% c("2021", "2022", "2023", "2024")) %>%
+  group_by(FIRE_ID, Year) %>%
+  summarise(
+    ppt = mean(ppt, na.rm = TRUE),
+    tmin = mean(tmin, na.rm = TRUE),
+    tmean = mean(tmean, na.rm = TRUE),
+    tmax = mean(tmax, na.rm = TRUE),
+    tdmean = mean(tdmean, na.rm = TRUE),
+    vpdmin = mean(vpdmin, na.rm = TRUE),
+    vpdmax = mean(vpdmax, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(cols = c(ppt:vpdmax), names_to = "Variable", values_to = "Value")
+
+# Plot using boxplots by year
+ggplot(df_abiotic, aes(x = Year, y = Value, fill = Year)) +
+  geom_boxplot(outlier.shape = 21, outlier.size = 1) +
+  facet_wrap(~ Variable, scales = "free_y") +
+  theme_classic() +
+  labs(x = "Year", y = "Mean Value", title = "Abiotic Covariates per Fire (2021–2024)\nGrouped by Year")
+```
+## Compare Abiotic Conditions to 2024 Using Tukey HSD and Annotate Boxplots
+
+```{r abiotic-significance-2024-only, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(rstatix)
+library(ggpubr)
+
+# Ensure Year is a factor
+df_abiotic$Year <- as.factor(df_abiotic$Year)
+
+# Run Tukey HSD per variable and filter comparisons to 2024
+tukey_filtered <- df_abiotic %>%
+  group_by(Variable) %>%
+  tukey_hsd(Value ~ Year) %>%
+  filter(group2 == "2024") %>%
+  ungroup()
+
+# Create label placement df (for placing on the boxplot)
+label_df <- df_abiotic %>%
+  group_by(Variable, Year) %>%
+  summarise(y = max(Value, na.rm = TRUE) * 1.05, .groups = "drop") %>%
+  left_join(
+    tukey_filtered %>% select(Variable, group1, p.adj.signif),
+    by = c("Variable", "Year" = "group1")
+  )
+
+# Replace NAs (which occur for 2024) with "ref"
+label_df$p.adj.signif[is.na(label_df$p.adj.signif)] <- "ref"
+
+# Plot
+ggplot(df_abiotic, aes(x = Year, y = Value, fill = Year)) +
+  geom_boxplot(outlier.shape = 21, outlier.size = 1) +
+  geom_text(data = label_df, aes(label = p.adj.signif, y = y), inherit.aes = TRUE, size = 3.5) +
+  facet_wrap(~ Variable, scales = "free_y") +
+  theme_classic() +
+  labs(
+    x = "Year", y = "Mean Value",
+    title = "Abiotic Covariates per Fire (2021–2024)\nStatistical Significance vs. 2024",
+    caption = "* = p < 0.05   ** = p < 0.01   *** = p < 0.001  **** = p < 0.0001  ref = reference group (2024)"
+)
+```
+## AFG Importance Figure 
+```{r biotic-afg-figure}
+# Load libraries
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(scales)
+
+# Read and prep data
+afg_2023_table <- read_csv("ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv") %>%
+  filter(year == 2023) %>%
+  rename(
+    FIRE_ID = OBJECTID_1,
+    `Fire Name` = INCIDENT,
+    `AFG Cover (%)` = AFG,
+    `Fire Size (acres)` = GIS_ACRES
+  ) %>%
+  select(FIRE_ID, `Fire Name`, `AFG Cover (%)`, `Fire Size (acres)`)
+
+# Total acres burned
+total_acres <- sum(afg_2023_table$`Fire Size (acres)`, na.rm = TRUE)
+formatted_total <- comma(round(total_acres, 0))
+
+# Add % burned and threshold group
+afg_2023_table <- afg_2023_table %>%
+  mutate(
+    `Percent of Total Burned` = `Fire Size (acres)` / total_acres,
+    Label = paste0(round(`Percent of Total Burned` * 100, 1), "%\n(", round(`Fire Size (acres)`), " acres)"),
+    `Threshold Group` = ifelse(`AFG Cover (%)` > 15, ">15%", "≤15%")
+  )
+
+# Threshold proportion summaries
+threshold_summary <- afg_2023_table %>%
+  group_by(`Threshold Group`) %>%
+  summarise(Proportion = sum(`Percent of Total Burned`)) %>%
+  mutate(Proportion = round(Proportion * 100, 1))  # convert to %
+
+prop_above <- threshold_summary %>% filter(`Threshold Group` == ">15%") %>% pull(Proportion)
+prop_below <- threshold_summary %>% filter(`Threshold Group` == "≤15%") %>% pull(Proportion)
+
+# Caption with summary
+caption_text <- paste0("Fires ≤15% AFG: ", prop_below, "% of total acres burned | ", "Fires >15% AFG: ", prop_above, "% of total acres burned"
+                       )
+
+# Create the plot
+ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Cover (%)`))) +
+  geom_point(aes(size = `Fire Size (acres)`), color = "#cc5500", alpha = 0.7) +
+  geom_text(aes(label = Label), hjust = -0.1, size = 3.5) +
+  geom_vline(xintercept = 15, linetype = "dashed", color = "black") +
+  scale_size_continuous(range = c(2, 10)) +
+  guides(size = "none") +
+  theme_classic() +
+  labs(
+    title = "2023 AFG Cover by Fire",
+    subtitle = paste("Dot labels show % of total acres burned\nTotal acres burned:", formatted_total),
+    caption = caption_text,
+    x = "AFG Cover (%)",
+    y = "Fire Name"
+  ) +
+  xlim(0, max(afg_2023_table$`AFG Cover (%)`, na.rm = TRUE) + 5)
+```
