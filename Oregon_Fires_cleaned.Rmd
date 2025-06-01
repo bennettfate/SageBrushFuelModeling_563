@@ -157,6 +157,14 @@ ggplot(df_abiotic, aes(x = Year, y = Value, fill = Year)) +
     title = "Abiotic Covariates per Fire (2021–2024)\nStatistical Significance vs. 2024",
     caption = "* = p < 0.05   ** = p < 0.01   *** = p < 0.001  **** = p < 0.0001  ref = reference group (2024)"
 )
+
+ggsave(
+  filename = "abiotic_tukey_analysis.png",
+  path = "C:/Users/allesl/Documents/GitHub/SageBrushFuelModeling_563/Oregon_2024_Plots",
+  width = 14,
+  height = 12,
+  dpi = 300
+)
 ```
 ## AFG Importance Figure 
 ```{r biotic-afg-figure}
@@ -204,7 +212,7 @@ caption_text <- paste0("Fires ≤15% AFG: ", prop_below, "% of total acres burne
 
 # Create the plot
 ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Cover (%)`))) +
-  geom_point(aes(size = `Fire Size (acres)`), color = "#cc5500", alpha = 0.7) +
+  geom_point(aes(size = `Fire Size (acres)`), color = "#cc5500", alpha = 1.0) +
   geom_text(aes(label = Label), hjust = -0.1, size = 3.5) +
   geom_vline(xintercept = 15, linetype = "dashed", color = "black") +
   scale_size_continuous(range = c(2, 10)) +
@@ -218,7 +226,15 @@ ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Co
     y = "Fire Name"
   ) +
   xlim(0, max(afg_2023_table$`AFG Cover (%)`, na.rm = TRUE) + 5)
-``` 
+ggsave(
+  filename = "AFG_2023_dotplot.png",
+  path = "C:/Users/allesl/Documents/GitHub/SageBrushFuelModeling_563/Oregon_2024_Plots",
+  width = 14,
+  height = 12,
+  dpi = 300
+)
+
+```
 
 
 
@@ -305,8 +321,6 @@ library(sf)
 Biotic_cov_sf <- st_as_sf(Biotic_cov_with_xy, coords = c("x", "y"), crs = 4326)
 
 mapview(Biotic_cov_sf, zcol = "AFG", col.regions = viridis::viridis(100), layer.name = "AFG Cover")
-
-
 
 ```
 
