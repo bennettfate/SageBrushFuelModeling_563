@@ -1,4 +1,4 @@
-# Sagebrush Steppe Applied Wildfire Modeling Project 
+# Abiotic and Biotic Precursors to Oregon's 2024 Record Fire Season 
 
 ## **Objective:**
 This project aims to enhance existing wildland fire modeling frameworks, equations, and software by explicitly accounting for the fuel discontinuity characteristic of sagebrush steppe ecosystems. Current quantitative fire models are primarily built upon assumptions of continuous fuel beds, leading to potentially inaccurate predictions of fire spread, intensity, and flame lengths within the inherently patchy vegetation typical of sagebrush steppe landscapes. By refining these models to reflect the actual vegetative structure, this project aims to produce more realistic wildfire behavior predictions, directly supporting land and fire managers in decision-making processes.
