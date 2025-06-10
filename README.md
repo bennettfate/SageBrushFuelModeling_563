@@ -1,21 +1,31 @@
-# Abiotic and Biotic Precursors to Oregon's 2024 Record Fire Season 
+## ***Abiotic and Biotic Precursors to Oregon's 2024 Record Fire Season*** 
 
 ## **Objective:**
-This project aims to enhance existing wildland fire modeling frameworks, equations, and software by explicitly accounting for the fuel discontinuity characteristic of sagebrush steppe ecosystems. Current quantitative fire models are primarily built upon assumptions of continuous fuel beds, leading to potentially inaccurate predictions of fire spread, intensity, and flame lengths within the inherently patchy vegetation typical of sagebrush steppe landscapes. By refining these models to reflect the actual vegetative structure, this project aims to produce more realistic wildfire behavior predictions, directly supporting land and fire managers in decision-making processes.
+This project examines biotic and abiotic conditions that preceded the 20 largest wildfires in Oregon during the 2024 fire season. By analyzing annual vegetation and climate data from 2021 through the year of ignition, we aim to identify consistent environmental patterns associated with large fire events.
 
 ## **Context and Need:**
-Wildfire modeling within sagebrush-dominated landscapes is challenging due to the inherent spatial heterogeneity of vegetation cover and the frequent presence of bare interspaces and discontinuous fuel patches. While widely used, standard quantitative fire modeling tools (e.g., BehavePlus, FlamMap, FARSITE) inadequately represent these conditions, potentially leading to discrepancies between modeled predictions and observed fire behavior. A tailored approach is thus critical to accurately represent fuel dynamics and improve wildfire management strategies specific to the Great Basin and similar arid ecosystems.
+The 2024 fire season in Oregon was historically large and destructive. Understanding the conditions that preceded these fires is essential for anticipating future fire risk and informing management decisions. While both vegetation composition and climate are known to influence fire behavior, few studies have systematically evaluated these drivers across multiple large fire events in a single season. This project addresses that need by analyzing pre-fire fuel and climate conditions across the 20 largest fires in Oregon during the 2024 wildfire season, primarily within eastern Oregon. 
 
 ## **Data Sources and Methods:**
-This project will leverage vegetative composition datasets from the Sagebrush Steppe Treatment and Evaluation Project (SageSTEP), spanning approximately 2006 to 2018. Data from 15 diverse study sites distributed across the Great Basin collectively represent the region's variation and dynamics of vegetation types. These datasets will be integrated into spatially explicit modeling frameworks, using empirical and probabilistic approaches to adjust fuel model parameters, explicitly accounting for gaps, vegetation patchiness, and spatial discontinuities.
+We analyzed annual data from 2021 through 2024 for each fire perimeter using the following sources:
 
-To enhance model accessibility and adaptability, we propose developing an interactive web-based tool using RShiny.
+- Rangeland Analysis Platform (RAP): Annual fractional cover estimates for annual forbs and grasses (AFG), perennial forbs and grasses (PFG), and shrubs (SHR).
+
+- PRISM Climate Data: Annual values for precipitation, mean temperature, and vapor pressure deficit (VPD).
+
+- Fire Perimeters: Boundaries for the 20 largest wildfires in Oregon from the 2024 season, used to spatially summarize all vegetation and climate variables.
+
+For each fire, we extracted and averaged all variables across the full fire perimeter to characterize pre-ignition conditions. We then conducted a Random Forest classification analysis to assess the relative importance of each variable.
 
 ## **Anticipated Outcomes and Significance:**
-1. The proposed refined modeling framework will offer land managers more accurate, reliable wildfire predictions explicitly tailored to the unique conditions of sagebrush steppe ecosystems.
-2. Enhanced accuracy will support effective fire suppression, prescribed burning, invasive species control, and ecosystem restoration planning efforts, contributing significantly to the resilience and conservation of these critical arid ecosystems.
-3. RShiny tool will allow users to explore, adjust, and visualize model outputs in real time. Users will be able to input site-specific variables, modify fuel parameters, and test scenario-based simulations, supporting both research and management decision-making. This component aims to bridge model development and end-user application by making the models more transparent, customizable, and easy to disseminate.
+This project contributes to a growing body of work seeking to understand the drivers of extreme wildfire events in the western United States. By analyzing biotic and abiotic conditions across the 20 largest Oregon wildfires of 2024, our results offer insight into the environmental precursors that may elevate large fire risk.
 
-![image](https://github.com/user-attachments/assets/59b692ec-b335-4c39-adbe-b5a73ee98b87)
+Preliminary findings suggest that areas with high annual grass cover and increased atmospheric moisture stress (e.g., elevated VPD) may be more likely to experience large fires under dry and warm conditions. These patterns, if consistent across years, could inform early warning systems and improve spatial targeting for fuels management, such as targeted grazing, prescribed burning, or vegetation treatments.
 
+Our Random Forest analysis identified potential key predictors of large fire occurrence; however, the unexpectedly high classification accuracy highlights the need for model validation using independent data or additional fire years. Despite this limitation, the analysis provides a useful framework for screening relevant variables and identifying patterns worth investigating further.
+
+Ultimately, this work strengthens the foundation for data-informed fire risk assessments and supports more proactive land management strategies tailored to Oregon’s changing fire regimes.
+
+![image](https://github.com/user-attachments/assets/bc507067-18bc-4d29-a693-eb040b91480c)
+Image Couresy of: Boise State Public Radio 
 
