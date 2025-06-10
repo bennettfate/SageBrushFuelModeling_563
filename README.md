@@ -27,5 +27,6 @@ Our Random Forest analysis identified potential key predictors of large fire occ
 Ultimately, this work strengthens the foundation for data-informed fire risk assessments and supports more proactive land management strategies tailored to Oregon’s changing fire regimes.
 
 ![image](https://github.com/user-attachments/assets/bc507067-18bc-4d29-a693-eb040b91480c)
+
 Image Couresy of: Boise State Public Radio 
 
