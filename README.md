@@ -16,16 +16,16 @@ Clone the files from this repo directly to your local desktop. The analysis is r
 ## **Folder Layout:** 
 
 - ANALYSIS: R files for analyzing data. Cleaned file is the file to use. The biotic and abiotic subfolders house data that is used in the analysis and is designed to be pulled directly from code without needing to change it.
-  -  ABIOTIC - holds data files with fire perimeters and abiotic fire conditions.
-  -  BIOTIC - holds data files with zonal statistics of biotic land cover in fire perimeters.
+  -  ABIOTIC: holds data files with fire perimeters and abiotic fire conditions.
+  -  BIOTIC: holds data files with zonal statistics of biotic land cover in fire perimeters.
 
-- DATA - Secondary storage of the data used in the analysis. This is the same data located in the biotic and abiotic subfolders in the ANALYSIS folder.
-  -  ABIOTIC - holds data files around fire perimeters and abiotic fire conditions.
-  -  BIOTIC - holds data files with zonal statistics of biotic land cover in fire perimeters.
+- DATA: Secondary storage of the data used in the analysis. This is the same data located in the biotic and abiotic subfolders in the ANALYSIS folder.
+  -  ABIOTIC: holds data files around fire perimeters and abiotic fire conditions.
+  -  BIOTIC: holds data files with zonal statistics of biotic land cover in fire perimeters.
   
-- MISC CODE - Some intial exploration with a wildfire fuel modeling tool.
+- MISC CODE: Some intial exploration with a wildfire fuel modeling tool.
 
-- Oregon_2024_Plots - Exploratory plots analyzing wildfires in 2024 in Eastern Oregon.
+- Oregon_2024_Plots: Exploratory plots analyzing wildfires in 2024 in Eastern Oregon.
 
 ## **Objective:**
 This project examines biotic and abiotic conditions that preceded the 20 largest wildfires in Oregon during the 2024 fire season. By analyzing annual vegetation and climate data from 2021 through the year of ignition, we aim to identify consistent environmental patterns associated with large fire events.
