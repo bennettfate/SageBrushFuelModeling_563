@@ -10,9 +10,10 @@
 (tidyr -- 1.3.1)
 (caret -- 7.0.1)
 
-## **Installation Instructions** 
+## **Installation Instructions:**
 After pulling cloning the files to your local desktop the analysis can be run in the Oreogn_Fires_cleaned.rmd file. All the packages to be installed are located in the first block. If these packages are not installed, use install.packages("package name") to install neccessary packages. The file is set to pull in the data from the data file. Run through the blocks of code to run the intial processing and random forest analysis of the data. 
-## **Folder Layout** 
+
+## **Folder Layout:** 
 Analysis - R files for analyzing data. Cleaned file is the file to use. The biotic and abiotic subfolders house data that is used in the analysis and is designed to be pulled directly from code without needing to change it. 
 
 Data - Secondary storage of the data used in the analysis
