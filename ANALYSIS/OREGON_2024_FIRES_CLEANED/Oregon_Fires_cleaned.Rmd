@@ -22,10 +22,14 @@ library(randomForest)
 
 ```{r load-data}
 # Load fire location and identifier data
-fire <- read.csv("Selected_fire_information.csv")
 
+ab_file_path <- paste0(getwd(),"/ABIOTIC")
+b_file_path <- paste0(getwd(),"/BIOTIC")
+
+fire <- read.csv(file.path(ab_file_path, "Selected_fire_information.csv"))
 # Load abiotic covariate data
-cov <- read.csv("Fire_data.csv") %>%
+
+cov <- read.csv(file.path(ab_file_path,"Fire_data.csv")) %>%
   filter(!apply(., 1, function(row) all(is.na(row) | row == ""))) %>%
   mutate(cov_id = row_number())
 
@@ -34,7 +38,8 @@ unique_fire_ids <- unique(fire$FIRE_ID)
 correct_abiotic_cov <- cov %>% filter(Name %in% unique_fire_ids)
 
 # Load biotic covariate data and join XY coordinates from fire data
-Biotic_cov <- read.csv("ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv")
+Biotic_cov <- read.csv(file.path(b_file_path,"ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv"))
+
 Biotic_cov_with_xy <- Biotic_cov %>%
   left_join(fire %>% select(FIRE_ID, x, y), by = c("OBJECTID_1" = "FIRE_ID")) %>%
   select(2:7, x, y)  # Selecting only relevant columns
@@ -82,7 +87,8 @@ matched_df <- inner_join(cov_2020_2024, Biotic_cov_with_xy, by = c("x", "y", "Ye
 ## Temporal Trends in Abiotic and Biotic Conditions
 
 ```{r abiotic-boxplot}
-df_abiotic <- read.csv("Fire_data.csv", check.names = FALSE) %>%
+
+df_abiotic <- read.csv(file.path(ab_file_path,"Fire_data.csv"), check.names = FALSE)  %>%
   rename(
     FIRE_ID = Name,
     ppt = `ppt (mm)`,
@@ -174,8 +180,10 @@ library(dplyr)
 library(readr)
 library(scales)
 
+
+
 # Read and prep data
-afg_2023_table <- read_csv("ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv") %>%
+afg_2023_table <- read.csv(file.path(b_file_path,"ZonalStats_AFG_PFG_SHR_TRE_ByFireArea_2021_2024.csv"))%>%
   filter(year == 2023) %>%
   rename(
     FIRE_ID = OBJECTID_1,
@@ -226,6 +234,7 @@ ggplot(afg_2023_table, aes(x = `AFG Cover (%)`, y = reorder(`Fire Name`, `AFG Co
     y = "Fire Name"
   ) +
   xlim(0, max(afg_2023_table$`AFG Cover (%)`, na.rm = TRUE) + 5)
+
 ggsave(
   filename = "AFG_2023_dotplot.png",
   path = "C:/Users/allesl/Documents/GitHub/SageBrushFuelModeling_563/Oregon_2024_Plots",
