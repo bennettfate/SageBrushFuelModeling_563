@@ -1,19 +1,29 @@
 ## ***Abiotic and Biotic Precursors to Oregon's 2024 Record Fire Season*** 
 
+## **Dependencies:**
+(dplyr -- version 1.1.4)
+(sf -- version 1.0.20)
+(mapview -- 2.11.2)
+(ggplot2 -- 3.5.2)
+(randomForest -- 4.7.1.2)
+(pdp -- 0.8.2)
+(tidyr -- 1.3.1)
+(caret -- 7.0.1)
+
+## **Installation Instructions** 
+After pulling cloning the files to your local desktop the analysis can be run in the Oreogn_Fires_cleaned.rmd file. All the packages to be installed are located in the first block. If these packages are not installed, use install.packages("package name") to install neccessary packages. The file is set to pull in the data from the data file. Run through the blocks of code to run the intial processing and random forest analysis of the data. 
+## **Folder Layout** 
+Analysis - R files for analyzing data. Cleaned file is the file to use. The biotic and abiotic subfolders house data that is used in the analysis and is designed to be pulled directly from code without needing to change it. 
+
+Data - Secondary storage of the data used in the analysis
+
+MISC CODE - Some intial exploration with a wildfire fuel modeling tool
+
+Oregon_2024_Plots - Exploratory plots analyzing wildfires in 2024 in Eastern Oregon
+
 ## **Objective:**
 This project examines biotic and abiotic conditions that preceded the 20 largest wildfires in Oregon during the 2024 fire season. By analyzing annual vegetation and climate data from 2021 through the year of ignition, we aim to identify consistent environmental patterns associated with large fire events.
 
-## **Dependencies:**
-dplyr -- version 1.1.4
-sf -- version 1.0.20
-mapview -- 2.11.2
-ggplot2 -- 3.5.2
-randomForest -- 4.7.1.2
-pdp -- 0.8.2
-tidyr -- 1.3.1
-caret -- 7.0.1
-
-## **Installation Instructions** 
 ## **Context and Need:**
 The 2024 fire season in Oregon was historically large and destructive. Understanding the conditions that preceded these fires is essential for anticipating future fire risk and informing management decisions. While both vegetation composition and climate are known to influence fire behavior, few studies have systematically evaluated these drivers across multiple large fire events in a single season. This project addresses that need by analyzing pre-fire fuel and climate conditions across the 20 largest fires in Oregon during the 2024 wildfire season, primarily within eastern Oregon. 
 
