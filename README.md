@@ -14,9 +14,10 @@
 Clone the files from this repo directly to your local desktop. The analysis is run in the ANALYSIS/OREGON_2024_FIRES_CLEANED/Oregon_Fires_cleaned.rmd file. All the packages to be installed are located in the first block. If these packages are not installed, use install.packages ("package name") to install neccessary packages. The file is set to pull in the data from the data files in the abiotic and biotic sub-directories. Run through the blocks of code in order to run the intial processing and random forest analysis of the data. 
 
 ## **Folder Layout:** 
-ANALYSIS - R files for analyzing data. Cleaned file is the file to use. The biotic and abiotic subfolders house data that is used in the analysis and is designed to be pulled directly from code without needing to change it. 
-  -ABIOTIC - holds data files with fire perimeters and abiotic fire conditions.
-  -BIOTIC - holds data files with zonal statistics of biotic land cover in fire perimeters.
+- ANALYSIS - R files for analyzing data. Cleaned file is the file to use. The biotic and abiotic subfolders house data that is used in the analysis and is designed to be pulled directly from code without needing to change it. 
+ 
+-    -ABIOTIC - holds data files with fire perimeters and abiotic fire conditions.
+-    -BIOTIC - holds data files with zonal statistics of biotic land cover in fire perimeters.
 
 DATA - Secondary storage of the data used in the analysis. This is the same data located in the biotic and abiotic subfolders in the ANALYSIS folder. 
   -ABIOTIC - holds data files around fire perimeters and abiotic fire conditions.
