@@ -19,7 +19,7 @@ Clone the files from this repo directly to your local desktop. The analysis is r
   - OREGON_2024_FIRES_CLEANED: Holds cleaned data and .rmd file to run it for Oregon 2024 wildfires. 
     -  ABIOTIC: holds data files with fire perimeters and abiotic fire conditions.
     -  BIOTIC: holds data files with zonal statistics of biotic land cover in fire perimeters.
-- OREGON_2024_FIRES_UNCLEANED: Holds .R file from intial analyses.
+  - OREGON_2024_FIRES_UNCLEANED: Holds .R file from intial analyses.
 
 - DATA: Secondary storage of the data used in the analysis. This is the same data located in the biotic and abiotic subfolders in the ANALYSIS folder.
   -  ABIOTIC: holds data files around fire perimeters and abiotic fire conditions.
